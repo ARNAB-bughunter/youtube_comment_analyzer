@@ -237,6 +237,7 @@
   }
 
   .input-bar input::placeholder { color: var(--text3); }
+  .input-bar input:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .analyze-btn {
     padding: 10px 22px;
@@ -838,7 +839,7 @@
     </div>
     <div class="metric-card m-q">
       <div class="metric-label">Questions asked</div>
-      <div class="metric-value">0</div>
+      <div class="metric-value" id="metric-question-count">0</div>
       <div class="metric-sub">–</div>
     </div>
     <div class="metric-card m-spam">
@@ -1119,7 +1120,9 @@
     if (!url) { showError('Please enter a YouTube URL.'); return; }
 
     const btn = document.getElementById('analyze-btn');
+    const input = document.getElementById('url-input');
     btn.disabled = true;
+    input.disabled = true;
     btn.innerHTML = LOADING_ICON + ' Analyzing…';
     clearError();
 
@@ -1136,16 +1139,19 @@
       showError('Could not reach the server.');
     } finally {
       btn.disabled = false;
+      input.disabled = false;
       btn.innerHTML = ANALYZE_ICON + ' Analyze';
     }
   }
 
   function applyResults(data) {
-    const total = data.total_comments;
+    const total_comments = data.total_comments;
     const total_comments_analysed = data.total_comments_analysed;
+    const question_count = data.question_count;
     
-    document.getElementById('metric-total').textContent = total >= 1000 ? (total / 1000).toFixed(1) + 'K' : total;
+    document.getElementById('metric-total').textContent = total_comments >= 1000 ? (total_comments / 1000).toFixed(1) + 'K' : total_comments;
     document.getElementById('metric-total-sub').textContent = total_comments_analysed + ' comments analysed';
+    document.getElementById('metric-question-count').textContent = question_count >= 1000 ? (question_count / 1000).toFixed(1) + 'K' : question_count;
 
     const s = data.sentiment;
     document.getElementById('metric-sent').textContent = Math.round(s.positive_pct) + '%';

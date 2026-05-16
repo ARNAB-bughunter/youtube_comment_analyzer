@@ -6,6 +6,7 @@ from youtube_comment_downloader import YoutubeCommentDownloader
 
 from emotion_analyse import classify_emotion
 from sentiment_analyse import analyse
+from quesion_analyse import classify_comment
 
 
 SENTIMENT_SCORE = {"positive": 1, "neutral": 0, "negative": -1}
@@ -67,10 +68,13 @@ def build_dataframe(comments: list[dict]) -> pd.DataFrame:
 
 
 def add_sentiment(df: pd.DataFrame) -> pd.DataFrame:
-    df[["label", "score"]] = df["text"].apply(lambda t: pd.Series(analyse(t)))
-    df["sentiment_score"] = df["label"].map(SENTIMENT_SCORE)
+    df[["sentiment_label", "sentiment_score"]] = df["text"].apply(lambda t: pd.Series(analyse(t)))
+    df["sentiment_score"] = df["sentiment_label"].map(SENTIMENT_SCORE)
     return df
 
+def clasify_statement_feedback_question_request(df: pd.DataFrame) -> pd.DataFrame:
+    df["comment_type"] = df["text"].apply(classify_comment)
+    return df
 
 def add_emotion(df: pd.DataFrame) -> pd.DataFrame:
     def top_emotion(text: str) -> str:
@@ -140,7 +144,9 @@ def main(video_url) -> None:
 
     df = build_dataframe(comments)
     df = add_sentiment(df)
+    df = clasify_statement_feedback_question_request(df)
     df = add_emotion(df)
+    # df.to_csv("test.csv")
 
     trend = compute_trend(df)
     scores = trend.set_index("bucket")["sentiment_score"].reset_index(drop=True)
